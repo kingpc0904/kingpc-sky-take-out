@@ -1,16 +1,21 @@
 package com.sky.service.impl;
 
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.constant.PasswordConstant;
 import com.sky.constant.StatusConstant;
 import com.sky.context.BaseContext;
 import com.sky.dto.EmployeeDTO;
 import com.sky.dto.EmployeeLoginDTO;
+import com.sky.dto.EmployeePageQueryDTO;
 import com.sky.entity.Employee;
 import com.sky.exception.AccountLockedException;
 import com.sky.exception.AccountNotFoundException;
 import com.sky.exception.PasswordErrorException;
 import com.sky.mapper.EmployeeMapper;
+import com.sky.result.PageResult;
+import com.sky.result.Result;
 import com.sky.service.EmployeeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -20,6 +25,7 @@ import org.springframework.util.DigestUtils;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -81,10 +87,25 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setCreateTime(LocalDateTime.now());
         employee.setUpdateTime(LocalDateTime.now());
         //设置当前记录的创建者id和修改者id
+        //通过ThreadLocal来获取创建者id和修改者id
         employee.setCreateUser(BaseContext.getCurrentId());
         employee.setUpdateUser(BaseContext.getCurrentId());
 
         employeeMapper.insert(employee);
+    }
+
+    @Override
+    public PageResult pageFind(EmployeePageQueryDTO employeePageQueryDTO) {
+        //准备分页查询
+        //利用PageHelper插件，底层有ThreadLocal，用来存储第几页和每页显示条数，
+        // 能够动态的拼接MySQL语句（limit 0,10），计算从第几条数据开始
+        PageHelper.startPage(employeePageQueryDTO.getPage(),employeePageQueryDTO.getPageSize());
+
+        Page<Employee> page = employeeMapper.pageFind(employeePageQueryDTO);
+
+        long total = page.getTotal();
+        List<Employee> record = page.getResult();
+        return new PageResult(total,record);
     }
 
 }
