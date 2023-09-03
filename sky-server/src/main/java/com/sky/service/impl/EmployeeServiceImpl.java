@@ -56,7 +56,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         //密码比对
         //将前端传过来的明文密码通过md5加密，再与数据库的密码进行比对
         password = DigestUtils.md5DigestAsHex(password.getBytes());
-        //当发现两个看似一样的字符串但是equals总是false时，可以通过Arrays.toString(字符串.toBytes)
+        //当发现两个看似一样的字符串但是equals总是false时，可以通过Arrays.toString(字符串.toBytes)来对比每一个字节是否相同
 //        log.info(Arrays.toString(password.getBytes()));
 //        log.info(Arrays.toString(employee.getPassword().getBytes()));
         if (!password.equals(employee.getPassword())) {
@@ -119,5 +119,25 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         employeeMapper.update(employee);
     }
+
+    @Override
+    public Employee getById(Long id) {
+        //根据id查询员工信息
+        Employee employee = employeeMapper.getById(id);
+        return employee;
+    }
+
+    @Override
+    public void updateEmp(EmployeeDTO employeeDTO) {
+        Employee employee = new Employee();
+        //对象属性拷贝
+        BeanUtils.copyProperties(employeeDTO,employee);
+        //读取修改的时间和修改者
+        employee.setUpdateTime(LocalDateTime.now());
+        employee.setUpdateUser(BaseContext.getCurrentId());
+
+        employeeMapper.update(employee);
+    }
+
 
 }

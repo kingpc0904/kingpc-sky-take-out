@@ -15,15 +15,17 @@
 
     <update id="update" parameterType="Employee">
         update employee
-        <set><if test="name != null">name = #{name},</if></set>
-        <set><if test="username != null">username = #{username},</if></set>
-        <set><if test="password != null">password = #{password},</if></set>
-        <set><if test="phone != null">phone = #{phone},</if></set>
-        <set><if test="sex != null">sex = #{sex},</if></set>
-        <set><if test="idNumber != null">id_number = #{idNumber},</if></set>
-        <set><if test="status != null">status = #{status},</if></set>
-        <set><if test="updateTime != null">update_time = #{updateTime},</if></set>
-        <set><if test="updateUser != null">update_user = #{updateUser},</if></set>
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="username != null">username = #{username},</if>
+            <if test="password != null">password = #{password},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="sex != null">sex = #{sex},</if>
+            <if test="idNumber != null">id_number = #{idNumber},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updateUser != null">update_user = #{updateUser},</if>
+        </set>
         <where>id = #{id}</where>
     </update>
 </mapper>
