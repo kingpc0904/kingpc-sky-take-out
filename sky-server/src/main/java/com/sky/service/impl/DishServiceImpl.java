@@ -127,7 +127,7 @@ public class DishServiceImpl implements DishService {
      * @param dishDTO
      * @return
      */
-    @Override
+    @Transactional
     public void UpdateWithFlavor(DishDTO dishDTO) {
         //更新菜品表
         Dish dish = new Dish();
