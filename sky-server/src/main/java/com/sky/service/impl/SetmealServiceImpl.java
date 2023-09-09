@@ -6,10 +6,13 @@ import com.sky.constant.MessageConstant;
 import com.sky.constant.StatusConstant;
 import com.sky.dto.SetmealDTO;
 import com.sky.dto.SetmealPageQueryDTO;
+import com.sky.entity.Dish;
 import com.sky.entity.Setmeal;
 import com.sky.entity.SetmealDish;
 import com.sky.exception.DeletionNotAllowedException;
+import com.sky.exception.SetmealEnableFailedException;
 import com.sky.mapper.CategoryMapper;
+import com.sky.mapper.DishMapper;
 import com.sky.mapper.SetmealDishMapper;
 import com.sky.mapper.SetmealMapper;
 import com.sky.result.PageResult;
@@ -22,6 +25,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.management.openmbean.OpenDataException;
 import java.util.List;
 import java.util.Set;
 
@@ -37,6 +41,9 @@ public class SetmealServiceImpl implements SetmealService {
     @Autowired
     private CategoryMapper categoryMapper;
 
+    @Autowired
+    private DishMapper dishMapper;
+
     /**
      * 新增套餐
      * @param setmealDTO
@@ -47,7 +54,8 @@ public class SetmealServiceImpl implements SetmealService {
         //新增套餐数据
         Setmeal setmeal = new Setmeal();
         BeanUtils.copyProperties(setmealDTO,setmeal);
-        //TODO 设置套餐初始为停售状态
+        //设置套餐初始为停售状态
+        setmeal.setStatus(StatusConstant.DISABLE);
         setmealMapper.insert(setmeal);
 
         //获取套餐数据的主键值
@@ -81,7 +89,18 @@ public class SetmealServiceImpl implements SetmealService {
             String categoryName =  categoryMapper.getNameById(setmeal.getCategoryId());
             //设置套餐的分类名称
             setmeal.setCategoryName(categoryName);
-            //TODO 如果套餐中有菜品处于停售状态，则设置套餐也处于停售状态
+            //如果套餐中有菜品处于停售状态，则设置套餐也处于停售状态
+            if (setmeal.getStatus() == StatusConstant.ENABLE){
+                //根据套餐id获取菜品id
+                List<Long> dishesId = setmealDishMapper.getDishIdBySetmealId(setmeal.getId());
+                //遍历菜品id判断是否都处于启售状态
+                for (Long dishId : dishesId) {
+                    Dish dish = dishMapper.getById(dishId);
+                    if (dish.getStatus() == StatusConstant.DISABLE){
+                        setmeal.setStatus(StatusConstant.DISABLE);
+                    }
+                }
+            }
         });
 
         return new PageResult(page.getTotal(), page.getResult());
@@ -137,6 +156,19 @@ public class SetmealServiceImpl implements SetmealService {
      */
     @Override
     public void startOrStop(Integer status,Long id) {
+        //如果要启售套餐，判断套餐里的菜品是否都处于启售状态
+        //菜品都处于启售状态下，才可以启售套餐
+        if (status == StatusConstant.ENABLE){
+            //根据套餐id获取菜品id
+            List<Long> dishesId = setmealDishMapper.getDishIdBySetmealId(id);
+            //遍历菜品id判断是否都处于启售状态
+            for (Long dishId : dishesId) {
+                Dish dish = dishMapper.getById(dishId);
+                if (dish.getStatus() == StatusConstant.DISABLE){
+                    throw new SetmealEnableFailedException(MessageConstant.SETMEAL_ENABLE_FAILED);
+                }
+            }
+        }
         Setmeal setmeal = Setmeal.builder()
                                 .id(id)
                                 .status(status)
