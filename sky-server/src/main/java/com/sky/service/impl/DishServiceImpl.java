@@ -162,12 +162,21 @@ public class DishServiceImpl implements DishService {
 
     /**
      * 根据分类id查询菜品
+     * 用于新增套餐的分类菜品回显
      * @param categoryId
      * @return
      */
     @Override
     public List<Dish> getByCategoryId(Long categoryId) {
         List<Dish> dishes = dishMapper.getByCategoryId(categoryId);
+        // 加上一个判断条件，如果菜品处于停售状态，则不返回该菜品
+        for (int i = 0,len = dishes.size(); i < len; i++) {
+            if (dishes.get(i).getStatus() == StatusConstant.DISABLE){
+                dishes.remove(i);
+                len--;
+                i--;
+            }
+        }
         return dishes;
     }
 }
