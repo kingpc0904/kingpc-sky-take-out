@@ -81,4 +81,19 @@ public class SetmealController {
 
         return Result.success();
     }
+
+    /**
+     * 启售or禁售套餐
+     * @param status
+     * @return
+     */
+    @PostMapping("/status/{status}")
+    @ApiOperation("启售or禁售套餐")
+    public Result startOrStop(@PathVariable Integer status,Long id){
+        log.info("启售or禁售套餐:{},{}",status,id);
+
+        setmealService.startOrStop(status,id);
+
+        return Result.success();
+    }
 }

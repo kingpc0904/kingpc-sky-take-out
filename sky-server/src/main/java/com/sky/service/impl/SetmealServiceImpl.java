@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class SetmealServiceImpl implements SetmealService {
@@ -121,5 +122,19 @@ public class SetmealServiceImpl implements SetmealService {
             setmealDish.setSetmealId(setmeal.getId());
             setmealDishMapper.insert(setmealDish);
         });
+    }
+
+    /**
+     * 启售or禁售套餐
+     * @param status
+     * @return
+     */
+    @Override
+    public void startOrStop(Integer status,Long id) {
+        Setmeal setmeal = Setmeal.builder()
+                                .id(id)
+                                .status(status)
+                                .build();
+        setmealMapper.update(setmeal);
     }
 }
