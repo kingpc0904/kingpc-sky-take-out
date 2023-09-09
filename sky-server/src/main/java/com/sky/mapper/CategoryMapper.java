@@ -51,4 +51,12 @@ public interface CategoryMapper {
      */
     @Delete("delete from category where id = #{id}")
     void delete(Long id);
+
+    /**
+     * 根据分类id查询分类名称
+     * @param categoryId
+     * @return
+     */
+    @Select("select name from category where id = #{categoryId}")
+    String getNameById(Long categoryId);
 }

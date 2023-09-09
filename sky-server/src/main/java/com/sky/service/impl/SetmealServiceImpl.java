@@ -1,11 +1,17 @@
 package com.sky.service.impl;
 
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import com.sky.dto.SetmealDTO;
+import com.sky.dto.SetmealPageQueryDTO;
 import com.sky.entity.Setmeal;
 import com.sky.entity.SetmealDish;
+import com.sky.mapper.CategoryMapper;
 import com.sky.mapper.SetmealDishMapper;
 import com.sky.mapper.SetmealMapper;
+import com.sky.result.PageResult;
 import com.sky.service.SetmealService;
+import com.sky.vo.SetmealVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +27,9 @@ public class SetmealServiceImpl implements SetmealService {
 
     @Autowired
     private SetmealDishMapper setmealDishMapper;
+
+    @Autowired
+    private CategoryMapper categoryMapper;
 
     /**
      * 新增套餐
@@ -45,5 +54,28 @@ public class SetmealServiceImpl implements SetmealService {
             setmealDishMapper.insert(setmealDish);
         });
 
+    }
+
+    /**
+     * 套餐分页查询
+     * @param setmealPageQueryDTO
+     * @return
+     */
+    @Override
+    public PageResult pageQuery(SetmealPageQueryDTO setmealPageQueryDTO) {
+
+        PageHelper.startPage(setmealPageQueryDTO.getPage(),setmealPageQueryDTO.getPageSize());
+
+        Page<SetmealVO> page = setmealMapper.select(setmealPageQueryDTO);
+
+        List<SetmealVO> setmeals = page.getResult();
+        setmeals.forEach(setmeal -> {
+            //获取套餐对应的分类名称
+            String categoryName =  categoryMapper.getNameById(setmeal.getCategoryId());
+            //设置套餐的分类名称
+            setmeal.setCategoryName(categoryName);
+        });
+
+        return new PageResult(page.getTotal(), page.getResult());
     }
 }
