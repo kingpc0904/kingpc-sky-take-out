@@ -2,16 +2,20 @@ package com.sky.service.impl;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.sky.constant.MessageConstant;
+import com.sky.constant.StatusConstant;
 import com.sky.dto.SetmealDTO;
 import com.sky.dto.SetmealPageQueryDTO;
 import com.sky.entity.Setmeal;
 import com.sky.entity.SetmealDish;
+import com.sky.exception.DeletionNotAllowedException;
 import com.sky.mapper.CategoryMapper;
 import com.sky.mapper.SetmealDishMapper;
 import com.sky.mapper.SetmealMapper;
 import com.sky.result.PageResult;
 import com.sky.service.SetmealService;
 import com.sky.vo.SetmealVO;
+import org.aspectj.apache.bcel.ExceptionConstants;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -43,6 +47,7 @@ public class SetmealServiceImpl implements SetmealService {
         //新增套餐数据
         Setmeal setmeal = new Setmeal();
         BeanUtils.copyProperties(setmealDTO,setmeal);
+        //TODO 设置套餐初始为停售状态
         setmealMapper.insert(setmeal);
 
         //获取套餐数据的主键值
@@ -76,6 +81,7 @@ public class SetmealServiceImpl implements SetmealService {
             String categoryName =  categoryMapper.getNameById(setmeal.getCategoryId());
             //设置套餐的分类名称
             setmeal.setCategoryName(categoryName);
+            //TODO 如果套餐中有菜品处于停售状态，则设置套餐也处于停售状态
         });
 
         return new PageResult(page.getTotal(), page.getResult());
@@ -136,5 +142,27 @@ public class SetmealServiceImpl implements SetmealService {
                                 .status(status)
                                 .build();
         setmealMapper.update(setmeal);
+    }
+
+    /**
+     * 批量删除套餐
+     * @param ids
+     * @return
+     */
+    @Transactional
+    public void delete(List<Long> ids) {
+        //获取要删除的套餐是否处于停售状态
+        for (Long id : ids) {
+            if (setmealMapper.getById(id).getStatus() == StatusConstant.ENABLE){
+                throw new DeletionNotAllowedException(MessageConstant.SETMEAL_ON_SALE);
+            }
+        }
+        //删除套餐数据
+        for (Long id : ids) {
+            setmealMapper.delete(id);
+            //删除套餐菜品表的对应数据
+            setmealDishMapper.deleteBySetmealId(id);
+        }
+
     }
 }
