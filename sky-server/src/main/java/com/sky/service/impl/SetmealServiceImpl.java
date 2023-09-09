@@ -14,6 +14,7 @@ import com.sky.service.SetmealService;
 import com.sky.vo.SetmealVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -97,5 +98,28 @@ public class SetmealServiceImpl implements SetmealService {
 
         setmealVO.setSetmealDishes(setmealDishes);
         return setmealVO;
+    }
+
+    /**
+     * 修改套餐
+     * @param setmealDTO
+     * @return
+     */
+    @Transactional
+    public void update(SetmealDTO setmealDTO) {
+        //从setmealDTO获取setmeal对象
+        Setmeal setmeal = new Setmeal();
+        BeanUtils.copyProperties(setmealDTO,setmeal);
+        setmealMapper.update(setmeal);
+
+        //根据套餐id在套餐菜品表中删除对应的菜品关联信息
+        setmealDishMapper.deleteBySetmealId(setmealDTO.getId());
+
+        //将修改后的套餐菜品数据插入表中
+        List<SetmealDish> setmealDishes = setmealDTO.getSetmealDishes();
+        setmealDishes.forEach(setmealDish -> {
+            setmealDish.setSetmealId(setmeal.getId());
+            setmealDishMapper.insert(setmealDish);
+        });
     }
 }
